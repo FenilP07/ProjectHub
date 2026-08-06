@@ -1,0 +1,28 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: projecthub-postgres
+
+    environment:
+      POSTGRES_DB: projecthub
+      POSTGRES_USER: projecthub_user
+      POSTGRES_PASSWORD: projecthub_password
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - projecthub_postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U projecthub_user -d projecthub
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    restart: unless-stopped
+
+volumes:
+  projecthub_postgres_data:
