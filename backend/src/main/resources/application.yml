@@ -46,3 +46,10 @@ logging:
   level:
     root: INFO
     com.fenil.projecthub: DEBUG
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:Fw7KPSJGFW4pOJShm4tVBE6MIFXA/3rCTeqXNLpX0Tk=}
+    issuer: ${JWT_ISSUER:projecthub-api}
+    access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:PT15M}
+    refresh-token-ttl: ${JWT_REFRESH_TOKEN_TTL:P30D}

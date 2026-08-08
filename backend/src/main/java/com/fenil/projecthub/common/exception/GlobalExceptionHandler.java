@@ -1,6 +1,9 @@
 package com.fenil.projecthub.common.exception;
 
+import com.fenil.projecthub.auth.exception.AccountUnavailableException;
 import com.fenil.projecthub.auth.exception.EmailAlreadyExistsException;
+import com.fenil.projecthub.auth.exception.InvalidCredentialsException;
+import com.fenil.projecthub.auth.exception.InvalidRefreshTokenException;
 import com.fenil.projecthub.user.exception.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
@@ -137,6 +140,67 @@ public class GlobalExceptionHandler {
             HttpServletRequest request
     ) {
         ErrorCode errorCode = ErrorCode.EMAIL_ALREADY_EXISTS;
+
+        ApiError error = ApiError.of(
+                errorCode.getStatus().value(),
+                errorCode.getStatus().getReasonPhrase(),
+                errorCode.getCode(),
+                exception.getMessage(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(error);
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiError> handleInvalidCredentials(
+            InvalidCredentialsException exception,
+            HttpServletRequest request
+    ) {
+        ErrorCode errorCode = ErrorCode.INVALID_CREDENTIALS;
+
+        ApiError error = ApiError.of(
+                errorCode.getStatus().value(),
+                errorCode.getStatus().getReasonPhrase(),
+                errorCode.getCode(),
+                exception.getMessage(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(error);
+    }
+
+    @ExceptionHandler(AccountUnavailableException.class)
+    public ResponseEntity<ApiError> handleAccountUnavailable(
+            AccountUnavailableException exception,
+            HttpServletRequest request
+    ) {
+        ErrorCode errorCode = ErrorCode.ACCOUNT_UNAVAILABLE;
+
+        ApiError error = ApiError.of(
+                errorCode.getStatus().value(),
+                errorCode.getStatus().getReasonPhrase(),
+                errorCode.getCode(),
+                exception.getMessage(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(error);
+    }
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<ApiError> handleInvalidRefreshToken(
+            InvalidRefreshTokenException exception,
+            HttpServletRequest request
+    ) {
+        ErrorCode errorCode =
+                ErrorCode.INVALID_REFRESH_TOKEN;
 
         ApiError error = ApiError.of(
                 errorCode.getStatus().value(),

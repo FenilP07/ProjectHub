@@ -23,11 +23,25 @@ public enum ErrorCode {
             "INVALID_REQUEST",
             HttpStatus.BAD_REQUEST
     ),
+    INVALID_CREDENTIALS(
+            "INVALID_CREDENTIALS",
+            HttpStatus.UNAUTHORIZED
+    ),
+
+    ACCOUNT_UNAVAILABLE(
+            "ACCOUNT_UNAVAILABLE",
+            HttpStatus.FORBIDDEN
+    ),
+    INVALID_REFRESH_TOKEN(
+            "INVALID_REFRESH_TOKEN",
+            HttpStatus.UNAUTHORIZED
+    ),
 
     INTERNAL_SERVER_ERROR(
             "INTERNAL_SERVER_ERROR",
             HttpStatus.INTERNAL_SERVER_ERROR
     );
+
 
     private final String code;
     private final HttpStatus status;
