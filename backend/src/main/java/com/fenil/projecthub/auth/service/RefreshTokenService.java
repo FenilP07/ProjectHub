@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Service
 public class RefreshTokenService {
@@ -46,27 +47,51 @@ public class RefreshTokenService {
     //rotate
     @Transactional
     public TokenPair rotate(String rawToken) {
-
         String tokenHash = tokenHashService.hash(rawToken);
 
-        RefreshToken existing = refreshTokenRepository.findByTokenHash(tokenHash).orElseThrow(InvalidRefreshTokenException::new);
-        if (!existing.isUsable()) {
+        RefreshToken existing = refreshTokenRepository
+                .findByTokenHash(tokenHash)
+                .orElseThrow(InvalidRefreshTokenException::new);
+
+        if (existing.isRevoked()) {
+            handleTokenReuse(existing);
+
             throw new InvalidRefreshTokenException();
         }
+
+        if (existing.isExpired()) {
+            existing.revoke();
+
+            throw new InvalidRefreshTokenException();
+        }
+
         User user = existing.getUser();
 
         if (user.getStatus() != UserStatus.ACTIVE) {
             throw new InvalidRefreshTokenException();
         }
 
-        String newRawToken = refreshTokenGenerator.generate();
+        String newRawToken =
+                refreshTokenGenerator.generate();
 
-        RefreshToken replacement = new RefreshToken(user, tokenHashService.hash(newRawToken), Instant.now().plus(jwtProperties.refreshTokenTtl()));
+        RefreshToken replacement =
+                new RefreshToken(
+                        user,
+                        tokenHashService.hash(newRawToken),
+                        Instant.now().plus(
+                                jwtProperties.refreshTokenTtl()
+                        )
+                );
 
         refreshTokenRepository.save(replacement);
 
         existing.revoke(replacement.getId());
-        return new TokenPair(jwtService.generateAccessToken(user), newRawToken, jwtService.getAccessTokenLifetimeSeconds());
+
+        return new TokenPair(
+                jwtService.generateAccessToken(user),
+                newRawToken,
+                jwtService.getAccessTokenLifetimeSeconds()
+        );
     }
 
     //revoke
@@ -76,6 +101,26 @@ public class RefreshTokenService {
         String tokenHash = tokenHashService.hash(rawToken);
 
         refreshTokenRepository.findByTokenHash(tokenHash).filter(token -> !token.isRevoked()).ifPresent(RefreshToken::revoke);
+    }
+
+    // log out form all
+
+    @Transactional
+    public void revokeAllForUser(UUID userId) {
+
+        refreshTokenRepository.revokeAllActiveTokensForUser(
+                userId,
+                Instant.now()
+        );
+
+    }
+
+    private void handleTokenReuse(RefreshToken refreshToken) {
+        UUID userId = refreshToken.getUser().getId();
+
+        refreshTokenRepository.revokeAllActiveTokensForUser(
+                userId, Instant.now()
+        );
     }
 
 }
